@@ -17,14 +17,19 @@ public class DroneController : MonoBehaviour
     public float sensibiliteSourisY = 2f;
 
     [Header("Caméras")]
-    public Camera cameraFPS; // Caméra première personne
-    public Camera cameraTPS; // Caméra troisième personne
-    public float distanceTPS = 5f; // Distance de la caméra TPS
-    public float hauteurTPS = 2f; // Hauteur de la caméra TPS
+    public Camera cameraFPS;
+    public Camera cameraTPS;
+    public float distanceTPS = 5f;
+    public float hauteurTPS = 2f;
+
+    [Header("Plantation")]
+    public GameObject prefabGraine;
+    public float offsetPlantation = 2f;
+    public KeyCode touchePlantation = KeyCode.E;
 
     private float rotationX = 0f;
     private float rotationY = 0f;
-    private bool estEnFPS = true; // true = FPS, false = TPS
+    private bool estEnFPS = true;
 
     void Start()
     {
@@ -42,21 +47,19 @@ public class DroneController : MonoBehaviour
         GererAltitude();
         LimiterAltitude();
         GererSwitchCamera();
+        GererPlantation();
 
-        // Si en TPS, positionner la caméra
         if (!estEnFPS)
         {
             PositionnerCameraTPS();
         }
 
-        // Déverrouiller curseur avec Echap
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
 
-        // Reverrouiller avec clic
         if (Input.GetMouseButtonDown(0))
         {
             Cursor.lockState = CursorLockMode.Locked;
@@ -181,10 +184,40 @@ public class DroneController : MonoBehaviour
         transform.position = pos;
     }
 
+    void GererPlantation()
+    {
+        if (Input.GetKeyDown(touchePlantation))
+        {
+            PlanterGraine();
+        }
+    }
+
+    void PlanterGraine()
+    {
+        if (prefabGraine == null)
+        {
+            Debug.LogWarning("[DroneController] Aucun prefab de graine assigne !");
+            return;
+        }
+
+        Vector3 positionPlantation = transform.position - transform.up * offsetPlantation;
+
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, -transform.up, out hit, 100f))
+        {
+            positionPlantation = hit.point;
+        }
+
+        GameObject graine = Instantiate(prefabGraine, positionPlantation, Quaternion.identity);
+
+        Debug.Log($"[DroneController] Graine plantee a {positionPlantation}");
+    }
+
     void OnGUI()
     {
         GUI.Label(new Rect(10, 10, 300, 20), "Altitude: " + transform.position.y.ToString("F1") + "m");
         GUI.Label(new Rect(10, 30, 300, 20), "Caméra: " + (estEnFPS ? "Première Personne" : "Troisième Personne"));
         GUI.Label(new Rect(10, 50, 300, 20), "Appuyez sur Entrée pour changer");
+        GUI.Label(new Rect(10, 70, 300, 20), "Appuyez sur " + touchePlantation.ToString() + " pour planter");
     }
 }

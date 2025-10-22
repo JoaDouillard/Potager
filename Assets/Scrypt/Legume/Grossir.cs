@@ -1,52 +1,63 @@
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Script simple pour faire grossir progressivement un objet
+/// Version corrigée - utilise uniquement une Coroutine
+/// </summary>
 public class Grossir : MonoBehaviour
 {
+    [Header("Paramètres de croissance")]
+    [Tooltip("Vitesse de croissance (scale ajouté par frame)")]
+    public float speedGrossir = 0.01f;
 
-    public float speedGrossir = 1f;
-    public float timeBeforeScale = 2f;
+    [Tooltip("Délai avant de commencer à grossir (en secondes)")]
+    public float timeBeforeScale = 0f;
 
-    public float currentTimeBeforeScale = 2f;
+    [Tooltip("Scale maximum de l'objet")]
     public float maxScale = 10f;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header("Debug")]
+    public bool afficherDebug = false;
+
     void Start()
     {
-        Coroutine_ScaleUp(transform);
-
-
+        // Démarrer la coroutine de croissance (FIX: ajout de StartCoroutine)
+        StartCoroutine(Coroutine_ScaleUp());
     }
 
-    // Update is called once per frame
-    void Update()
+    /// <summary>
+    /// Coroutine qui fait grossir l'objet progressivement
+    /// </summary>
+    private IEnumerator Coroutine_ScaleUp()
     {
-        while (true)
+        // Attendre le délai initial si nécessaire
+        if (timeBeforeScale > 0)
         {
-            ScaleUp();
+            yield return new WaitForSeconds(timeBeforeScale);
         }
-    }
-    
-    private void ScaleUp()
-    {
-        transform.localScale += Vector3.one; 
-    }
 
-    private IEnumerator Coroutine_ScaleUp(Transform me)
-    {
-        Debug.Log("je suis l�");
-        while (me.localScale.x < maxScale)
+        if (afficherDebug)
         {
-            yield return new WaitForEndOfFrame();
-            me.localScale += Vector3.one * 1.0f;
-            Debug.Log("je suis plus l�");
+            Debug.Log($"[Grossir] Début de la croissance de {gameObject.name}");
         }
-        oui();
 
-    }
+        // Faire grossir progressivement jusqu'à atteindre maxScale
+        while (transform.localScale.x < maxScale)
+        {
+            // Ajouter la croissance
+            transform.localScale += Vector3.one * speedGrossir;
 
-    private void oui()
-    {
-        Debug.Log("oui");
+            // Attendre la prochaine frame
+            yield return null;
+        }
+
+        // S'assurer que la taille finale est exactement maxScale
+        transform.localScale = Vector3.one * maxScale;
+
+        if (afficherDebug)
+        {
+            Debug.Log($"[Grossir] {gameObject.name} a atteint sa taille maximale de {maxScale}");
+        }
     }
 }
