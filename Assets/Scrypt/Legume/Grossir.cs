@@ -1,10 +1,9 @@
 using System.Collections;
 using UnityEngine;
 
-/// <summary>
-/// Script simple pour faire grossir progressivement un objet
-/// Version corrigée - utilise uniquement une Coroutine
-/// </summary>
+
+// Script simple pour faire grossir progressivement un objet
+// Version corrigée - utilise uniquement une Coroutine
 public class Grossir : MonoBehaviour
 {
     [Header("Paramètres de croissance")]
@@ -26,9 +25,8 @@ public class Grossir : MonoBehaviour
         StartCoroutine(Coroutine_ScaleUp());
     }
 
-    /// <summary>
-    /// Coroutine qui fait grossir l'objet progressivement
-    /// </summary>
+ 
+    // Coroutine qui fait grossir l'objet progressivement
     private IEnumerator Coroutine_ScaleUp()
     {
         // Attendre le délai initial si nécessaire

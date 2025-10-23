@@ -2,42 +2,61 @@ using UnityEngine;
 
 public class DroneController : MonoBehaviour
 {
-    [Header("Paramètres de mouvement")]
-    public float vitesseDeplacement = 2f;
-    public float vitesseSprint = 4f; // Vitesse en sprint
-    public float vitesseMonteeDescente = 0.5f;
-
-    [Header("Paramètres d'altitude")]
+    [Header("Mouvement")]
+    public float vitesseDeplacement = 5f;
+    public float vitesseSprint = 10f;
+    public float vitesseMonteeDescente = 3f;
     public float chuteLente = 0.5f;
-    public float altitudeMax = 50f;
-    public float altitudeMin = 0f;
 
-    [Header("Sensibilité souris")]
+    [Header("Altitude")]
+    public float altitudeMin = 0.5f;
+    public float altitudeMax = 50f;
+
+    [Header("Inclinaison du drone")]
+    public float angleInclinaisonMax = 3f;
+    public float vitesseInclinaison = 5f;
+
+    [Header("Camera")]
+    public Camera cameraJoueur;
     public float sensibiliteSourisX = 2f;
     public float sensibiliteSourisY = 2f;
-
-    [Header("Caméras")]
-    public Camera cameraFPS;
-    public Camera cameraTPS;
-    public float distanceTPS = 5f;
-    public float hauteurTPS = 2f;
+    public Vector3 offsetCameraFPS = new Vector3(0f, 0.5f, 0f);
+    public Vector3 offsetCameraTPS = new Vector3(0f, 3f, -8f);
+    public float vitesseTransitionCamera = 25f;
+    public KeyCode toucheSwitchCamera = KeyCode.V;
+    public float limiteInclinaisonCameraHaut = 30f;
+    public float limiteInclinaisonCameraBas = 10f;
 
     [Header("Plantation")]
-    public GameObject prefabGraine;
-    public float offsetPlantation = 2f;
+    public InfoGraine[] typesGrainesDisponibles;
+    public int indexGraineCourante = 0;
     public KeyCode touchePlantation = KeyCode.E;
+    public KeyCode toucheChangerGraine = KeyCode.R;
+    public float rayonDetectionZone = 3f;
 
-    private float rotationX = 0f;
-    private float rotationY = 0f;
+    private float rotationCameraX = 0f;
+    private float rotationCameraY = 0f;
     private bool estEnFPS = true;
+    private Vector3 offsetCameraCible;
+    private Vector3 velociteCamera;
+    private ZonePlantation zoneProcheActuelle;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // Activer la caméra FPS par défaut
-        ActiverCameraFPS();
+        if (cameraJoueur == null)
+        {
+            cameraJoueur = Camera.main;
+        }
+
+        offsetCameraCible = offsetCameraFPS;
+
+        if (cameraJoueur != null)
+        {
+            cameraJoueur.transform.SetParent(null);
+        }
     }
 
     void Update()
@@ -46,13 +65,11 @@ public class DroneController : MonoBehaviour
         GererDeplacement();
         GererAltitude();
         LimiterAltitude();
+        GererInclinaisonDrone();
         GererSwitchCamera();
+        DetecterZonePlantation();
+        GererChangementGraine();
         GererPlantation();
-
-        if (!estEnFPS)
-        {
-            PositionnerCameraTPS();
-        }
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -60,57 +77,16 @@ public class DroneController : MonoBehaviour
             Cursor.visible = true;
         }
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
     }
 
-    void GererSwitchCamera()
+    void LateUpdate()
     {
-        // Touche Entrée pour changer de caméra
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-        {
-            estEnFPS = !estEnFPS;
-
-            if (estEnFPS)
-            {
-                ActiverCameraFPS();
-            }
-            else
-            {
-                ActiverCameraTPS();
-            }
-        }
-    }
-
-    void ActiverCameraFPS()
-    {
-        if (cameraFPS != null) cameraFPS.enabled = true;
-        if (cameraTPS != null) cameraTPS.enabled = false;
-        Debug.Log("Mode: Première Personne");
-    }
-
-    void ActiverCameraTPS()
-    {
-        if (cameraFPS != null) cameraFPS.enabled = false;
-        if (cameraTPS != null) cameraTPS.enabled = true;
-        Debug.Log("Mode: Troisième Personne");
-    }
-
-    void PositionnerCameraTPS()
-    {
-        if (cameraTPS == null) return;
-
-        // Position derrière le drone
-        Vector3 positionCible = transform.position - transform.forward * distanceTPS + Vector3.up * hauteurTPS;
-
-        // Déplacer la caméra en douceur (optionnel)
-        cameraTPS.transform.position = Vector3.Lerp(cameraTPS.transform.position, positionCible, Time.deltaTime * 10f);
-
-        // Faire regarder le drone
-        cameraTPS.transform.LookAt(transform.position + Vector3.up * hauteurTPS * 0.5f);
+        PositionnerCamera();
     }
 
     void GererRotationCamera()
@@ -118,17 +94,27 @@ public class DroneController : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * sensibiliteSourisX;
         float mouseY = Input.GetAxis("Mouse Y") * sensibiliteSourisY;
 
-        rotationY += mouseX;
-        rotationX -= mouseY;
-        rotationX = Mathf.Clamp(rotationX, -90f, 90f);
+        rotationCameraY += mouseX;
+        rotationCameraX -= mouseY;
+        rotationCameraX = Mathf.Clamp(rotationCameraX, limiteInclinaisonCameraBas, limiteInclinaisonCameraHaut);
+    }
 
-        transform.rotation = Quaternion.Euler(rotationX, rotationY, 0f);
+    void PositionnerCamera()
+    {
+        if (cameraJoueur == null) return;
 
-        // Si en FPS, synchroniser la rotation de la caméra
-        if (estEnFPS && cameraFPS != null)
-        {
-            cameraFPS.transform.rotation = transform.rotation;
-        }
+        offsetCameraCible = estEnFPS ? offsetCameraFPS : offsetCameraTPS;
+
+        Vector3 positionCible = transform.position + transform.TransformDirection(offsetCameraCible);
+
+        cameraJoueur.transform.position = Vector3.SmoothDamp(
+            cameraJoueur.transform.position,
+            positionCible,
+            ref velociteCamera,
+            1f / vitesseTransitionCamera
+        );
+
+        cameraJoueur.transform.rotation = Quaternion.Euler(rotationCameraX, rotationCameraY, 0f);
     }
 
     void GererDeplacement()
@@ -143,7 +129,11 @@ public class DroneController : MonoBehaviour
 
         float vitesseActuelle = Input.GetKey(KeyCode.LeftShift) ? vitesseSprint : vitesseDeplacement;
 
-        Vector3 direction = (transform.forward * vertical + transform.right * horizontal).normalized;
+        Vector3 directionCamera = Quaternion.Euler(0f, rotationCameraY, 0f) * Vector3.forward;
+        Vector3 droiteCamera = Quaternion.Euler(0f, rotationCameraY, 0f) * Vector3.right;
+
+        Vector3 direction = (directionCamera * vertical + droiteCamera * horizontal).normalized;
+
         transform.position += direction * vitesseActuelle * Time.deltaTime;
     }
 
@@ -184,6 +174,71 @@ public class DroneController : MonoBehaviour
         transform.position = pos;
     }
 
+    void GererInclinaisonDrone()
+    {
+        float vertical = 0f;
+        float horizontal = 0f;
+
+        if (Input.GetKey(KeyCode.Z)) vertical = -1f;
+        if (Input.GetKey(KeyCode.S)) vertical = 1f;
+        if (Input.GetKey(KeyCode.Q)) horizontal = 1f;
+        if (Input.GetKey(KeyCode.D)) horizontal = -1f;
+
+        float inclinaisonAvant = -vertical * angleInclinaisonMax;
+        float inclinaisonCote = horizontal * angleInclinaisonMax;
+
+        Quaternion rotationBase = Quaternion.Euler(0, rotationCameraY, 0f);
+        Quaternion inclinaison = Quaternion.Euler(inclinaisonAvant, 0f, inclinaisonCote);
+        Quaternion rotationCible = rotationBase * inclinaison;
+
+        transform.rotation = Quaternion.Lerp(
+            transform.rotation,
+            rotationCible,
+            Time.deltaTime * vitesseInclinaison
+        );
+    }
+
+    void GererSwitchCamera()
+    {
+        if (Input.GetKeyDown(toucheSwitchCamera))
+        {
+            estEnFPS = !estEnFPS;
+            Debug.Log(estEnFPS ? "Mode: Premiere Personne" : "Mode: Troisieme Personne");
+        }
+    }
+
+    void DetecterZonePlantation()
+    {
+        Collider[] zonesProches = Physics.OverlapSphere(transform.position, rayonDetectionZone);
+
+        zoneProcheActuelle = null;
+
+        foreach (Collider col in zonesProches)
+        {
+            ZonePlantation zone = col.GetComponent<ZonePlantation>();
+            if (zone != null && zone.PeutPlanter())
+            {
+                zoneProcheActuelle = zone;
+                break;
+            }
+        }
+    }
+
+    void GererChangementGraine()
+    {
+        if (Input.GetKeyDown(toucheChangerGraine))
+        {
+            if (typesGrainesDisponibles == null || typesGrainesDisponibles.Length == 0)
+            {
+                Debug.LogWarning("[DroneController] Aucune graine disponible !");
+                return;
+            }
+
+            indexGraineCourante = (indexGraineCourante + 1) % typesGrainesDisponibles.Length;
+            Debug.Log($"[DroneController] Graine selectionnee : {typesGrainesDisponibles[indexGraineCourante].type}");
+        }
+    }
+
     void GererPlantation()
     {
         if (Input.GetKeyDown(touchePlantation))
@@ -194,30 +249,50 @@ public class DroneController : MonoBehaviour
 
     void PlanterGraine()
     {
-        if (prefabGraine == null)
+        if (typesGrainesDisponibles == null || typesGrainesDisponibles.Length == 0)
         {
-            Debug.LogWarning("[DroneController] Aucun prefab de graine assigne !");
+            Debug.LogWarning("[DroneController] Aucune graine disponible !");
             return;
         }
 
-        Vector3 positionPlantation = transform.position - transform.up * offsetPlantation;
-
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, -transform.up, out hit, 100f))
+        if (zoneProcheActuelle == null)
         {
-            positionPlantation = hit.point;
+            Debug.LogWarning("[DroneController] Aucune zone de plantation proche !");
+            return;
         }
 
-        GameObject graine = Instantiate(prefabGraine, positionPlantation, Quaternion.identity);
+        if (!zoneProcheActuelle.PeutPlanter())
+        {
+            Debug.LogWarning("[DroneController] Zone deja occupee !");
+            return;
+        }
 
-        Debug.Log($"[DroneController] Graine plantee a {positionPlantation}");
+        InfoGraine graineInfo = typesGrainesDisponibles[indexGraineCourante];
+
+        zoneProcheActuelle.PlanterGraine(graineInfo.type, graineInfo);
+
+        Debug.Log($"[DroneController] {graineInfo.type} plantee dans zone {zoneProcheActuelle.name}");
     }
 
     void OnGUI()
     {
         GUI.Label(new Rect(10, 10, 300, 20), "Altitude: " + transform.position.y.ToString("F1") + "m");
-        GUI.Label(new Rect(10, 30, 300, 20), "Caméra: " + (estEnFPS ? "Première Personne" : "Troisième Personne"));
-        GUI.Label(new Rect(10, 50, 300, 20), "Appuyez sur Entrée pour changer");
-        GUI.Label(new Rect(10, 70, 300, 20), "Appuyez sur " + touchePlantation.ToString() + " pour planter");
+        GUI.Label(new Rect(10, 30, 300, 20), "Camera: " + (estEnFPS ? "Premiere Personne (FPS)" : "Troisieme Personne (TPS)"));
+        GUI.Label(new Rect(10, 50, 300, 20), "Appuyez sur " + toucheSwitchCamera.ToString() + " pour changer");
+
+        if (typesGrainesDisponibles != null && typesGrainesDisponibles.Length > 0)
+        {
+            string graineCourante = typesGrainesDisponibles[indexGraineCourante].type.ToString();
+            GUI.Label(new Rect(10, 70, 300, 20), "Graine: " + graineCourante + " (R pour changer)");
+        }
+
+        if (zoneProcheActuelle != null && zoneProcheActuelle.PeutPlanter())
+        {
+            GUI.Label(new Rect(10, 90, 300, 20), "Appuyez sur " + touchePlantation.ToString() + " pour planter");
+        }
+        else if (zoneProcheActuelle != null)
+        {
+            GUI.Label(new Rect(10, 90, 300, 20), "Zone deja occupee");
+        }
     }
 }

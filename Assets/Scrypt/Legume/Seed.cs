@@ -1,30 +1,22 @@
 using System.Collections;
 using UnityEngine;
 
-
-// Script pour gérer la croissance d'une graine et sa transformation en légume
 public class Seed : MonoBehaviour
 {
-    [Header("Paramètres de croissance")]
-    [Tooltip("Temps en secondes avant de devenir un légume")]
+    [Header("Parametres de croissance")]
     public float tempsCroissance = 5f;
-
-    [Tooltip("Taille initiale de la graine")]
     public float scaleInitial = 0.1f;
-
-    [Tooltip("Taille finale avant transformation")]
     public float scaleFinal = 1f;
-
-    [Tooltip("Vitesse de croissance visuelle")]
     public float vitesseCroissance = 0.5f;
 
     [Header("Transformation")]
-    [Tooltip("Prefab du légume à instancier")]
     public GameObject prefabLegume;
 
-    [Header("Effets visuels (optionnel)")]
-    [Tooltip("Particules lors de la transformation")]
+    [Header("Effets visuels")]
     public GameObject particulesTransformation;
+
+    [Header("Zone de plantation")]
+    public ZonePlantation zonePlantation;
 
     [Header("Debug")]
     public bool afficherDebug = true;
@@ -76,33 +68,34 @@ public class Seed : MonoBehaviour
         TransformerEnLegume();
     }
 
-    
-    // Transforme la graine en légume
     void TransformerEnLegume()
     {
         if (prefabLegume == null)
         {
-            Debug.LogError("[Seed] Aucun prefab de légume assigné !");
+            Debug.LogError("[Seed] Aucun prefab de legume assigne !");
             Destroy(gameObject);
             return;
         }
 
         if (afficherDebug)
         {
-            Debug.Log($"[Seed] Transformation en légume à la position {transform.position}");
+            Debug.Log($"[Seed] Transformation en legume a la position {transform.position}");
         }
 
-        // Instancier le légume à la même position
         GameObject legume = Instantiate(prefabLegume, transform.position, transform.rotation);
 
-        // Optionnel : effet de particules
+        if (zonePlantation != null)
+        {
+            legume.transform.SetParent(zonePlantation.transform);
+            zonePlantation.planteCourante = legume;
+        }
+
         if (particulesTransformation != null)
         {
             GameObject particules = Instantiate(particulesTransformation, transform.position, Quaternion.identity);
-            Destroy(particules, 2f); // Détruire les particules après 2 secondes
+            Destroy(particules, 2f);
         }
 
-        // Détruire la graine
         Destroy(gameObject);
     }
 
