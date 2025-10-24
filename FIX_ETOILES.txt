@@ -1,0 +1,66 @@
+╔═══════════════════════════════════════════════════════╗
+║  CONFIGURATION DES ÉTOILES - Particle System          ║
+╚═══════════════════════════════════════════════════════╝
+
+PROBLÈME : Les étoiles apparaissent à un seul point au lieu de couvrir tout le ciel
+
+SOLUTION : Configurer correctement le Particle System
+
+┌────────────────────────────────────────────────────────┐
+│ 1. POSITIONNER LE PARTICLE SYSTEM                     │
+└────────────────────────────────────────────────────────┘
+
+Dans l'Inspector du Particle System "Stars" :
+→ Transform Position : X=0, Y=0, Z=0 (au centre du monde)
+
+
+┌────────────────────────────────────────────────────────┐
+│ 2. SECTION MAIN                                        │
+└────────────────────────────────────────────────────────┘
+
+Duration : 5
+Looping : ✓ (coché)
+Start Lifetime : 999 (très long pour qu'elles restent)
+Start Speed : 0 (elles ne bougent pas)
+Start Size : 0.05 - 0.1
+Start Color : Blanc
+Simulation Space : World (IMPORTANT !)
+Max Particles : 500 - 1000
+
+
+┌────────────────────────────────────────────────────────┐
+│ 3. SECTION EMISSION                                    │
+└────────────────────────────────────────────────────────┘
+
+Rate over Time : 0 (sera contrôlé par le script)
+
+
+┌────────────────────────────────────────────────────────┐
+│ 4. SECTION SHAPE (TRÈS IMPORTANT)                     │
+└────────────────────────────────────────────────────────┘
+
+Shape : Sphere
+Radius : 200 - 300 (grand pour couvrir tout le ciel !)
+Emit from Shell : ✓ (les étoiles apparaissent sur la sphère)
+
+
+┌────────────────────────────────────────────────────────┐
+│ 5. VÉRIFICATION                                        │
+└────────────────────────────────────────────────────────┘
+
+Lancez le jeu → Attendez la nuit (après 19h)
+→ Vous devriez voir les étoiles partout dans le ciel
+
+Si ça ne marche pas :
+- Vérifiez que Radius est bien grand (200+)
+- Vérifiez que Simulation Space = World
+- Vérifiez que Max Particles est assez élevé (500+)
+
+
+╔═══════════════════════════════════════════════════════╗
+║  RÉSUMÉ RAPIDE                                         ║
+╠═══════════════════════════════════════════════════════╣
+║  Shape = Sphere avec Radius GRAND (200-300)           ║
+║  Simulation Space = World                             ║
+║  Position du Particle System = (0, 0, 0)              ║
+╚═══════════════════════════════════════════════════════╝

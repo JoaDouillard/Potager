@@ -241,6 +241,65 @@ Créer un jeu de gestion de potager en 3D où le joueur pilote un **drone hortic
 - Soit avec des murs invisibles (BoxCollider)
 - Soit en clampant la position dans le script
 
+## **Information importante**
+# **❗ METTRE A JOUR LE CLAUDE.MD A CHAQUE MODIFICATION POUR AVOIR UN SUIVIS DE PROJET **
+
+## **INTERDICTION**
+
+### Ne pas faire des commantaire dans ce type de format
+///<summery>
+/// Le commentaire
+///<summery>
+
+---
+
+## 🌅 SYSTÈME SKYBOX - DayNightSkyboxManager
+
+**Fichier :** `Assets/Scrypt/Evironnement/Sky/DayNightSkyboxManager.cs`
+
+**Fonctionnalités :**
+- 5 skyboxes : Matin / Midi / Après-midi / Soirée / Nuit
+- Heures configurables par sliders
+- Soleil et lune tournent automatiquement
+- Étoiles (particules) la nuit
+- Rotation nuages constante
+
+**Configuration :**
+
+1. **Soleil & Lune** : Créer 2 Directional Lights → Les assigner (ils tourneront automatiquement autour de la scène)
+
+2. **Étoiles** : Créer Particle System
+   - Position : Au centre de la scène (0, 0, 0)
+   - Shape : **Sphere**
+   - Radius : **200-300** (grand pour couvrir tout le ciel)
+   - Start Lifetime : 999 (pour qu'elles restent affichées)
+   - Start Speed : 0
+   - Start Size : 0.05-0.1
+   - Simulation Space : **World** (important !)
+   - Max Particles : 500-1000
+
+3. Assigner 5 skyboxes dans l'Inspector
+
+4. Configurer Gradient "Couleur Soleil" et Courbe "Intensité Soleil"
+
+**Heures par défaut :**
+- Matin : 6h-10h
+- Midi : 10h-16h
+- Après-midi : 16h-17h30
+- Soirée : 17h30-19h
+- Nuit : 19h-6h
+
+**Positions soleil/lune :**
+- 12h (midi) : Soleil au zénith (point le plus haut)
+- 0h (minuit) : Lune au zénith (point le plus haut)
+- Le soleil et la lune tournent en fonction de `heureActuelle`, pas du temps réel
+- Distance : 1000 unités du centre pour simuler l'infini
+
+**Si vous ne voyez pas le soleil/lune :**
+- Vérifiez que les Directional Lights ne sont PAS enfants d'un autre objet
+- Le script doit pouvoir modifier leur Transform librement
+- Regardez dans la Scene view en mode jeu, ils doivent se déplacer
+
 ---
 
 ## 🎁 BONUS / DÉFIS OPTIONNELS

@@ -1,0 +1,178 @@
+╔═══════════════════════════════════════════════════════════════╗
+║     GUIDE RAPIDE - Configuration DayNightSkyboxManager        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────┐
+│ 1. CRÉER LE SOLEIL (Directional Light)                     │
+└─────────────────────────────────────────────────────────────┘
+  
+  ➤ Hierarchy → Clic droit → Light → Directional Light
+  ➤ Renommer : "Sun" ou "Soleil"
+  ➤ Color : Blanc
+  ➤ Intensity : 1
+  ➤ Mode : Realtime
+  
+  ➤ L'assigner au script dans le champ "Soleil"
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ 2. CRÉER LA LUNE (Directional Light)                       │
+└─────────────────────────────────────────────────────────────┘
+  
+  ➤ Hierarchy → Clic droit → Light → Directional Light
+  ➤ Renommer : "Moon" ou "Lune"
+  ➤ Color : Bleu pâle (0.5, 0.6, 0.8)
+  ➤ Intensity : 0.3
+  ➤ Mode : Realtime
+  
+  ➤ L'assigner au script dans le champ "Lune"
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ 3. CRÉER LES ÉTOILES (Particle System)                     │
+└─────────────────────────────────────────────────────────────┘
+  
+  ➤ Hierarchy → Clic droit → Effects → Particle System
+  ➤ Renommer : "Stars" ou "Etoiles"
+  ➤ Position Y : 50 (au-dessus de la scène)
+  
+  Configuration du Particle System :
+  ┌──────────────────────────────────────────┐
+  │ MAIN                                     │
+  │  • Duration : 10                         │
+  │  • Looping : ✓                           │
+  │  • Start Lifetime : 15                   │
+  │  • Start Speed : 0                       │
+  │  • Start Size : 0.05                     │
+  │  • Start Color : Blanc                   │
+  │  • Max Particles : 100                   │
+  └──────────────────────────────────────────┘
+  
+  ┌──────────────────────────────────────────┐
+  │ EMISSION                                 │
+  │  • Rate over Time : 0                    │
+  │    (sera contrôlé par le script)         │
+  └──────────────────────────────────────────┘
+  
+  ┌──────────────────────────────────────────┐
+  │ SHAPE                                    │
+  │  • Shape : Sphere                        │
+  │  • Radius : 100                          │
+  └──────────────────────────────────────────┘
+  
+  ➤ L'assigner au script dans le champ "Particles Etoiles"
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ 4. CONFIGURER LES SKYBOXES                                 │
+└─────────────────────────────────────────────────────────────┘
+  
+  Dans le script (Inspector) :
+  
+  ╔═══════════════════════════════════════════╗
+  ║ SKYBOXES JOUR (3 slots)                   ║
+  ╠═══════════════════════════════════════════╣
+  ║ Slot 0 : MATIN     (6h - 10h)             ║
+  ║ Slot 1 : MIDI      (10h - 16h30)          ║
+  ║ Slot 2 : SOIR      (16h30 - 19h)          ║
+  ╚═══════════════════════════════════════════╝
+  
+  ╔═══════════════════════════════════════════╗
+  ║ SKYBOXES NUIT (1 slot)                    ║
+  ╠═══════════════════════════════════════════╣
+  ║ Slot 0 : NUIT      (19h - 6h)             ║
+  ╚═══════════════════════════════════════════╝
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ 5. CONFIGURER LES COURBES ET GRADIENTS                     │
+└─────────────────────────────────────────────────────────────┘
+  
+  ➤ GRADIENT COULEUR SOLEIL (double-clic) :
+     0.0  → Bleu sombre (nuit)
+     0.25 → Orange (aube)
+     0.5  → Blanc/Jaune (midi)
+     0.75 → Orange (crépuscule)
+     1.0  → Bleu sombre (nuit)
+  
+  ➤ COURBE INTENSITÉ SOLEIL (double-clic) :
+     0.0  → 0.0 (nuit)
+     0.25 → 0.5 (aube)
+     0.5  → 1.0 (midi - maximum)
+     0.75 → 0.5 (crépuscule)
+     1.0  → 0.0 (nuit)
+  
+  ➤ COURBE VISIBILITÉ ÉTOILES (double-clic) :
+     0.0  → 1.0 (visible la nuit)
+     0.25 → 0.0 (invisible le jour)
+     0.75 → 0.0 (invisible le jour)
+     1.0  → 1.0 (visible la nuit)
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ 6. PARAMÈTRES RECOMMANDÉS                                  │
+└─────────────────────────────────────────────────────────────┘
+  
+  CYCLE JOUR/NUIT :
+  • Durée Jour En Secondes : 180 (3 min)
+  • Heure Actuelle : 12 (commencer à midi)
+  • Vitesse Temps : 1.0
+  • Heure Lever Soleil : 6
+  • Heure Coucher Soleil : 19
+  
+  LUMINOSITÉ :
+  • Intensité Max Soleil : 1.5
+  • Intensité Lune : 0.3
+  • Intensité Ambiante Jour : 1.0
+  • Intensité Ambiante Nuit : 0.2
+  
+  ÉTOILES :
+  • Activer Etoiles : ✓
+  • Nombre Max Etoiles : 100
+  
+  ROTATION NUAGES :
+  • Vitesse Rotation Nuages : 1.0
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ 7. TOUCHES DE DEBUG EN JEU                                 │
+└─────────────────────────────────────────────────────────────┘
+  
+  [H] → Pause/Reprendre le cycle
+  [J] → Ralentir le temps (-0.5x)
+  [K] → Accélérer le temps (+0.5x)
+
+
+┌─────────────────────────────────────────────────────────────┐
+│ DÉPANNAGE                                                   │
+└─────────────────────────────────────────────────────────────┘
+  
+  ❌ Le soleil/lune n'apparaît pas ?
+     → Vérifiez qu'ils sont assignés dans le script
+     → Vérifiez l'heure (soleil visible 6h-19h seulement)
+     → Regardez la rotation des Directional Lights
+  
+  ❌ Les étoiles ne s'affichent pas ?
+     → Vérifiez que le Particle System est assigné
+     → Attendez la nuit (après 19h)
+     → Vérifiez que "Activer Etoiles" est coché
+  
+  ❌ Les skyboxes ne changent pas ?
+     → Vérifiez que vous avez 3 skyboxes jour + 1 nuit
+     → Vérifiez la console pour les warnings
+     → Utilisez [K] pour accélérer le temps et voir les changements
+  
+  ❌ Les nuages ne tournent pas ?
+     → Votre skybox doit avoir la propriété "_Rotation"
+     → Augmentez "Vitesse Rotation Nuages"
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║  ORDRE DE CONFIGURATION RECOMMANDÉ :                          ║
+║  1. Soleil                                                    ║
+║  2. Skyboxes (3 jour + 1 nuit)                               ║
+║  3. Lune (optionnel)                                         ║
+║  4. Étoiles (optionnel)                                      ║
+║  5. Configurer les courbes/gradients                         ║
+╚═══════════════════════════════════════════════════════════════╝
+
